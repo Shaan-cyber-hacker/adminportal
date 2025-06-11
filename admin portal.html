@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>K.K. University Nalanda - Admin Panel</title>
+  <meta name="description" content="Admin panel for K.K. University Nalanda result portal with user management, messaging, notifications, and controls." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    /* CSS Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f7f9fc;
+      color: #1e293b;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      grid-template-columns: 1fr;
+      overflow: hidden;
+    }
+
+    /* Root variables */
+    :root {
+      --sidebar-width: 280px;
+      --header-height: 56px;
+      --primary-color: #2563eb; /* blue */
+      --primary-hover: #1e40af;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --bg-light: #f7f9fc;
+      --bg-sidebar: #1e293b;
+      --bg-sidebar-hover: #374151;
+      --bg-chat: #ffffff;
+      --border-radius: 12px;
+      --transition-default: 0.3s ease;
+      --shadow-default: 0 4px 6px rgb(0 0 0 / 0.1);
+      --icon-size: 20px;
+      --font-size-base: 14px;
+      --font-size-lg: 16px;
+    }
+
+    /* Layout container */
+    #app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 320px 1fr;
+      grid-template-rows: 1fr;
+      height: calc(100vh - var(--header-height));
+      max-width: 1600px;
+      margin: 0 auto;
+      box-shadow: var(--shadow-default);
+      background: var(--bg-chat);
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      grid-column: 1 / -1;
+      grid-row: 1 / 2;
+      background: var(--bg-sidebar);
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      font-weight: 700;
+      font-size: 1.25rem;
+      user-select: none;
+    }
+    header .menu-toggle {
+      display: none;
+      font-size: 28px;
+      cursor: pointer;
+      margin-right: 1rem;
+    }
+
+    /* Sidebar */
+    nav.sidebar {
+      background: var(--bg-sidebar);
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 1rem 0;
+      gap: 0.5rem;
+      overflow-y: auto;
+      border-right: 1px solid #334155;
+    }
+    nav.sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 12px 24px;
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: var(--font-size-base);
+      transition: background-color var(--transition-default), color var(--transition-default);
+      white-space: nowrap;
+    }
+    nav.sidebar a:hover,
+    nav.sidebar a.active {
+      background-color: var(--bg-sidebar-hover);
+      color: #fff;
+      cursor: pointer;
+    }
+    nav.sidebar a .material-icons {
+      font-size: var(--icon-size);
+      flex-shrink: 0;
+    }
+
+    /* Panel: Left - Users */
+    #panel-users {
+      background: var(--bg-light);
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    #panel-users header {
+      padding: 1rem 1rem;
+      border-bottom: 1px solid #cbd5e1;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #panel-users input[type="search"] {
+      width: 100%;
+      margin: 0 1rem 1rem 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: var(--font-size-base);
+      color: var(--text-primary);
+      outline-offset: 2px;
+    }
+    #panel-users input[type="search"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 5px var(--primary-color);
+    }
+    #user-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+      outline: none;
+    }
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      gap: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      background: transparent;
+      transition: background-color var(--transition-default);
+      position: relative;
+    }
+    .user-item:hover,
+    .user-item.active {
+      background-color: #dbeafe;
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #2563eb;
+      color: white;
+      font-weight: 700;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      font-size: var(--font-size-base);
+      color: var(--text-primary);
+      min-width: 0;
+    }
+    .user-name {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .edit-user-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      cursor: pointer;
+      font-size: 18px;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+    .edit-user-btn:hover,
+    .edit-user-btn:focus {
+      opacity: 1;
+    }
+
+    /* Panel: Middle - Conversations */
+    #panel-conversations {
+      background: var(--bg-light);
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: hidden;
+    }
+    #panel-conversations header {
+      padding: 1rem;
+      border-bottom: 1px solid #cbd5e1;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #conversation-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+      outline: none;
+    }
+    .conversation-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      gap: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      background: transparent;
+      transition: background-color var(--transition-default);
+    }
+    .conversation-item:hover,
+    .conversation-item.active {
+      background-color: #dbeafe;
+    }
+    .conversation-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: #2563eb;
+      color: white;
+      font-weight: 700;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    .conversation-info {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      font-size: var(--font-size-base);
+      color: var(--text-primary);
+      min-width: 0;
+    }
+    .conversation-title {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .conversation-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .conversation-time {
+      font-size: 11px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    /* Panel: Right - Chat / Details */
+    #panel-chat {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-light);
+      overflow: hidden;
+    }
+    #panel-chat header {
+      padding: 1rem 1rem;
+      border-bottom: 1px solid #cbd5e1;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      user-select: none;
+    }
+    #chat-user-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: #2563eb;
+      color: white;
+      font-weight: 700;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    #chat-user-name {
+      font-weight: 700;
+      font-size: 1.125rem;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #chat-messages {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      scroll-behavior: smooth;
+      background: #f0f4ff;
+    }
+    .message {
+      max-width: 70%;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      font-size: var(--font-size-lg);
+      line-height: 1.4;
+      box-shadow: var(--shadow-default);
+      user-select: text;
+      word-break: break-word;
+      display: inline-block;
+    }
+    .message.sent {
+      align-self: flex-end;
+      background: var(--primary-color);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .message.received {
+      align-self: flex-start;
+      background: white;
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+    }
+    /* Message timestamp */
+    .message-timestamp {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      user-select: none;
+      text-align: right;
+    }
+
+    /* Message input area */
+    #chat-input-area {
+      border-top: 1px solid #cbd5e1;
+      padding: 10px 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: white;
+    }
+    #chat-input {
+      font-size: var(--font-size-lg);
+      padding: 0.75rem 1rem;
+      border-radius: 24px;
+      border: 1.5px solid #cbd5e1;
+      flex-grow: 1;
+      outline-offset: 2px;
+    }
+    #chat-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 5px var(--primary-color);
+    }
+    #chat-send-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color var(--transition-default);
+    }
+    #chat-send-btn:hover,
+    #chat-send-btn:focus {
+      background: var(--primary-hover);
+      outline-offset: 2px;
+      outline: 2px solid var(--primary-hover);
+    }
+    #chat-send-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    /* Scrollbar styles */
+    #user-list::-webkit-scrollbar,
+    #conversation-list::-webkit-scrollbar,
+    #chat-messages::-webkit-scrollbar,
+    nav.sidebar::-webkit-scrollbar {
+      width: 8px;
+    }
+    #user-list::-webkit-scrollbar-thumb,
+    #conversation-list::-webkit-scrollbar-thumb,
+    #chat-messages::-webkit-scrollbar-thumb,
+    nav.sidebar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 6px;
+    }
+    #user-list::-webkit-scrollbar-track,
+    #conversation-list::-webkit-scrollbar-track,
+    #chat-messages::-webkit-scrollbar-track,
+    nav.sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    /* Notifications Toast */
+    #toast {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: var(--primary-color);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-default);
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+      font-weight: 700;
+      font-size: var(--font-size-base);
+      transition: opacity 0.3s ease;
+      z-index: 200;
+    }
+    #toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Modal styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0,0,0,0.4);
+      display: none;
+      z-index: 300;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    .modal-backdrop.show {
+      display: flex;
+    }
+    .modal {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-default);
+      max-width: 480px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      color: var(--text-primary);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .modal h2 {
+      margin-top: 0;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+    .modal label {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      display: block;
+      font-size: var(--font-size-base);
+    }
+    .modal input[type="text"],
+    .modal select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      font-size: var(--font-size-base);
+      border-radius: 8px;
+      border: 1.5px solid #cbd5e1;
+      color: var(--text-primary);
+      outline-offset: 2px;
+    }
+    .modal input[type="text"]:focus,
+    .modal select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 5px var(--primary-color);
+    }
+    .modal .results-container {
+      margin-top: 0.5rem;
+    }
+    .modal .results-header {
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      font-size: var(--font-size-base);
+    }
+    .modal .result-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+      align-items: center;
+    }
+    .modal .result-row input[type="text"] {
+      flex-grow: 1;
+    }
+    .modal .result-row button {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+    .modal .result-row button:hover {
+      background-color: #dbeafe;
+    }
+    .modal .add-result-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      align-self: flex-start;
+      user-select: none;
+      font-size: var(--font-size-base);
+      transition: background-color 0.3s ease;
+    }
+    .modal .add-result-btn:hover,
+    .modal .add-result-btn:focus {
+      background-color: var(--primary-hover);
+      outline: none;
+    }
+    .modal .buttons-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .modal button {
+      padding: 0.6rem 1.2rem;
+      font-weight: 700;
+      border-radius: 8px;
+      font-size: var(--font-size-base);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .modal button.save-btn {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    .modal button.save-btn:hover,
+    .modal button.save-btn:focus {
+      background-color: var(--primary-hover);
+      outline-offset: 2px;
+      outline: 2px solid var(--primary-hover);
+    }
+    .modal button.cancel-btn {
+      background-color: #e5e7eb;
+      color: var(--text-primary);
+    }
+    .modal button.cancel-btn:hover,
+    .modal button.cancel-btn:focus {
+      background-color: #d1d5db;
+      outline: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1439px) {
+      #app {
+        grid-template-columns: 60px 280px 1fr;
+      }
+      nav.sidebar a span {
+        display: none;
+      }
+    }
+    @media (max-width: 1023px) {
+      #app {
+        grid-template-columns: 60px 1fr;
+      }
+      #panel-conversations {
+        display: none;
+      }
+    }
+    @media (max-width: 767px) {
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      header {
+        grid-column: auto;
+        height: var(--header-height);
+        display: flex;
+        align-items: center;
+      }
+      .menu-toggle {
+        display: block;
+      }
+      #app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: auto;
+        overflow: visible;
+      }
+      nav.sidebar {
+        position: fixed;
+        top: var(--header-height);
+        bottom: 0;
+        left: -280px;
+        width: 280px;
+        z-index: 150;
+        transition: left var(--transition-default);
+        border-right: none;
+        box-shadow: 4px 0 12px rgb(0 0 0 / 0.15);
+      }
+      nav.sidebar.open {
+        left: 0;
+      }
+      nav.sidebar a span {
+        display: inline;
+      }
+      #panel-users, #panel-conversations, #panel-chat {
+        height: calc(100vh - var(--header-height));
+      }
+      #panel-conversations {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header role="banner" aria-label="Admin panel header">
+    <button class="material-icons menu-toggle" aria-label="Toggle menu" id="menuToggleBtn">menu</button>
+    K.K. University Nalanda - Admin Panel
+  </header>
+  <div id="app" role="main">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation" aria-label="Primary navigation">
+      <a href="#" class="nav-link active" data-panel="users"><span class="material-icons">people</span><span>Students</span></a>
+      <a href="#" class="nav-link" data-panel="conversations"><span class="material-icons">chat</span><span>Conversations</span></a>
+      <a href="#" class="nav-link" data-panel="settings"><span class="material-icons">settings</span><span>Settings</span></a>
+    </nav>
+
+    <!-- Users Panel -->
+    <section id="panel-users" role="region" aria-label="User management panel" tabindex="0">
+      <header>
+        Students
+        <button id="addUserBtn" aria-label="Add new student" title="Add new student" class="material-icons" style="background:none; border:none; color: var(--primary-color); cursor:pointer; font-size:22px;">person_add</button>
+      </header>
+      <input type="search" placeholder="Search students..." aria-label="Search students" id="userSearchInput" />
+      <div id="user-list" role="list" tabindex="0" aria-live="polite" aria-relevant="additions removals"></div>
+    </section>
+
+    <!-- Conversations Panel -->
+    <section id="panel-conversations" role="region" aria-label="Conversations panel" tabindex="0" aria-hidden="true" style="display:none;">
+      <header>Conversations</header>
+      <div id="conversation-list" role="list" tabindex="0" aria-live="polite" aria-relevant="additions removals"></div>
+    </section>
+
+    <!-- Chat / Details Panel -->
+    <section id="panel-chat" role="region" aria-label="Chat and conversation details panel" tabindex="0" aria-hidden="true" style="display:none;">
+      <header aria-live="polite" aria-atomic="true">
+        <div id="chat-user-avatar" aria-hidden="true"></div>
+        <div id="chat-user-name">Select a conversation</div>
+      </header>
+      <div id="chat-messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <form id="chat-input-area" aria-label="Send message form">
+        <input type="text" id="chat-input" placeholder="Type a message..." aria-label="Message input" autocomplete="off" disabled />
+        <button type="submit" id="chat-send-btn" aria-label="Send message" disabled>
+          <span class="material-icons" aria-hidden="true">send</span>
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <!-- Add/Edit Student Modal -->
+  <div id="studentModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle" tabindex="-1">
+    <div class="modal">
+      <h2 id="studentModalTitle">Add Student</h2>
+      <form id="studentForm">
+        <label for="studentNameInput">Full Name</label>
+        <input type="text" id="studentNameInput" name="name" required autocomplete="name" />
+        <label for="studentIdInput">Student ID Number</label>
+        <input type="text" id="studentIdInput" name="studentId" required autocomplete="off" />
+        <label for="studentDeptInput">Department</label>
+        <select id="studentDeptInput" name="department" required>
+          <option value="" disabled selected>Select department</option>
+          <option value="b.c.a">B.C.A</option>
+          <option value="m.c.a">M.C.A</option>
+          <option value="b.tech">B.tech</option>
+          <option value="m.tech">M.tech</option>
+          <option value="polythechnic">Polythechnic</option>
+          <option value="agriculture">Agriculture</option>
+          <option value="pharmacy">Pharmacy</option>
+          <option value="b.ed">B.ed</option>
+          <option value="b.sc">B.sc</option>
+          <option value="d.led">D.led</option>
+        </select>
+        <label for="studentSessionInput">Academic Session</label>
+        <input type="text" id="studentSessionInput" name="session" placeholder="e.g. 2020-2021" required autocomplete="off" />
+
+        <fieldset aria-label="Student results" id="resultsFieldset">
+          <legend>Marks - Subject & Grade</legend>
+          <div id="resultsContainer" class="results-container"></div>
+          <button type="button" class="add-result-btn" id="addResultRowBtn">Add Subject</button>
+        </fieldset>
+
+        <div class="buttons-row">
+          <button type="button" class="cancel-btn" id="cancelStudentBtn">Cancel</button>
+          <button type="submit" class="save-btn" id="saveStudentBtn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification toast -->
+  <div id="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+  <script>
+    (() => {
+      const storageKey = 'kkuniversityStudentResults';
+
+      // Try to get saved studentResults from localStorage, else use default sample data
+      const savedResultsJSON = localStorage.getItem(storageKey);
+      const defaultResults = [
+        {
+          name: "Richie Ravi",
+          studentId: "KKU12345",
+          department: "b.tech",
+          session: "2020-2024",
+          result: {
+            "Mathematics": "85%",
+            "Python Programming": "90%",
+            "Physics": "78%",
+            "Chemistry": "80%",
+            "Soft Skills": "88%"
+          }
+        },
+        {
+          name: "Anjali Singh",
+          studentId: "KKU23456",
+          department: "b.c.a",
+          session: "2019-2022",
+          result: {
+            "Quantum Mechanics": "88%",
+            "Electromagnetism": "92%",
+            "Mathematics": "85%",
+            "Programming": "90%"
+          }
+        },
+        {
+          name: "Mohit Verma",
+          studentId: "KKU34567",
+          department: "pharmacy",
+          session: "2021-2022",
+          result: {
+            "Accounting": "75%",
+            "Business Studies": "82%",
+            "Economics": "79%"
+          }
+        },
+        {
+          name: "Priya Sharma",
+          studentId: "KKU45678",
+          department: "m.tech",
+          session: "2022-2024",
+          result: {
+            "Advanced Algorithms": "91%",
+            "Machine Learning": "94%",
+            "Data Structures": "89%",
+            "Database Systems": "88%"
+          }
+        },
+        {
+          name: "Arjun Patel",
+          studentId: "KKU56789",
+          department: "agriculture",
+          session: "2020-2021",
+          result: {
+            "Soil Science": "27%",
+            "Crop Production": "30%",
+            "Animal Husbandry": "85%"
+          }
+        }
+      ];
+
+      const studentResults = savedResultsJSON ? JSON.parse(savedResultsJSON) : defaultResults;
+
+      const conversations = [
+        {
+          id: 'c1',
+          participants: ['KKU12345', 'admin'],
+          title: 'Richie Ravi',
+          messages: [
+            { senderId: 'KKU12345', text: 'Hello, when will the exam results be updated?', timestamp: new Date(Date.now() - 3600e3) },
+            { senderId: 'admin', text: 'Hi Richie, results are being processed and will be updated by tomorrow.', timestamp: new Date(Date.now() - 3500e3) },
+            { senderId: 'KKU12345', text: 'Thank you!', timestamp: new Date(Date.now() - 3400e3) }
+          ],
+        },
+        {
+          id: 'c2',
+          participants: ['KKU23456', 'admin'],
+          title: 'Anjali Singh',
+          messages: [
+            { senderId: 'KKU23456', text: "I can't find my result for last semester.", timestamp: new Date(Date.now() - 7200e3) },
+            { senderId: 'admin', text: 'Please provide your student ID, I will check.', timestamp: new Date(Date.now() - 7000e3) }
+          ],
+        },
+        {
+          id: 'c3',
+          participants: ['KKU34567', 'admin'],
+          title: 'Mohit Verma',
+          messages: [
+            { senderId: 'KKU34567', text: 'Are the pharmacy exam results published?', timestamp: new Date(Date.now() - 1800e3) }
+          ],
+        }
+      ];
+
+      let selectedPanel = 'users';
+      let selectedStudentId = null;
+      let selectedConversationId = null;
+
+      const navLinks = document.querySelectorAll('nav.sidebar a.nav-link');
+      const userListEl = document.getElementById('user-list');
+      const convListEl = document.getElementById('conversation-list');
+      const panelUsers = document.getElementById('panel-users');
+      const panelConversations = document.getElementById('panel-conversations');
+      const panelChat = document.getElementById('panel-chat');
+      const chatUserAvatar = document.getElementById('chat-user-avatar');
+      const chatUserName = document.getElementById('chat-user-name');
+      const chatMessages = document.getElementById('chat-messages');
+      const chatInput = document.getElementById('chat-input');
+      const chatSendBtn = document.getElementById('chat-send-btn');
+      const toast = document.getElementById('toast');
+      const userSearchInput = document.getElementById('userSearchInput');
+      const addUserBtn = document.getElementById('addUserBtn');
+      const menuToggleBtn = document.getElementById('menuToggleBtn');
+      const sidebar = document.querySelector('nav.sidebar');
+      const studentModalBackdrop = document.getElementById('studentModalBackdrop');
+      const studentModalTitle = document.getElementById('studentModalTitle');
+      const studentForm = document.getElementById('studentForm');
+      const studentNameInput = document.getElementById('studentNameInput');
+      const studentIdInput = document.getElementById('studentIdInput');
+      const studentDeptInput = document.getElementById('studentDeptInput');
+      const studentSessionInput = document.getElementById('studentSessionInput');
+      const resultsContainer = document.getElementById('resultsContainer');
+      const addResultRowBtn = document.getElementById('addResultRowBtn');
+      const cancelStudentBtn = document.getElementById('cancelStudentBtn');
+
+      // Utility: Create initials from name
+      function getInitials(name) {
+        return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+      }
+      // Utility: Format timestamp as HH:mm
+      function formatTime(date) {
+        return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      }
+      // Utility: Show toast message
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      }
+      // Save studentResults to localStorage to sync with main website
+      function saveDataToStorage() {
+        localStorage.setItem(storageKey, JSON.stringify(studentResults));
+      }
+
+      function renderUserList(filter = '') {
+        userListEl.innerHTML = '';
+        const filtered = studentResults.filter(u => u.name.toLowerCase().includes(filter.toLowerCase()) || u.studentId.toLowerCase().includes(filter.toLowerCase()));
+        if(filtered.length === 0) {
+          userListEl.innerHTML = '<p style="padding: 1rem; color: var(--text-secondary); font-style: italic;">No students found.</p>';
+          return;
+        }
+        filtered.forEach(user => {
+          const item = document.createElement('div');
+          item.className = 'user-item';
+          item.dataset.studentid = user.studentId;
+          item.setAttribute('role', 'listitem');
+          if(user.studentId === selectedStudentId) item.classList.add('active');
+
+          const avatar = document.createElement('div');
+          avatar.className = 'user-avatar';
+          avatar.style.backgroundColor = '#2563eb';
+          avatar.textContent = getInitials(user.name);
+          avatar.setAttribute('aria-hidden', 'true');
+          const info = document.createElement('div');
+          info.className = 'user-info';
+          const nameEl = document.createElement('div');
+          nameEl.className = 'user-name';
+          nameEl.textContent = user.name;
+          const subTitle = document.createElement('div');
+          subTitle.className = 'user-subtitle';
+          subTitle.textContent = `${user.department.toUpperCase()} • ${user.session}`;
+
+          info.appendChild(nameEl);
+          info.appendChild(subTitle);
+
+          // Edit button
+          const editBtn = document.createElement('button');
+          editBtn.setAttribute('aria-label', `Edit student ${user.name}`);
+          editBtn.className = 'edit-user-btn material-icons';
+          editBtn.textContent = 'edit';
+          editBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            openStudentModal(user.studentId);
+          });
+
+          item.appendChild(avatar);
+          item.appendChild(info);
+          item.appendChild(editBtn);
+
+          item.addEventListener('click', () => {
+            selectedStudentId = user.studentId;
+            let conv = conversations.find(c => c.participants.includes(user.studentId) && c.participants.includes('admin'));
+            if(!conv) {
+              conv = {
+                id: `c${conversations.length + 1}`,
+                participants: ['admin', user.studentId],
+                title: user.name,
+                messages: []
+              };
+              conversations.push(conv);
+            }
+            selectedConversationId = conv.id;
+
+            navLinks.forEach(l => l.classList.remove('active'));
+            document.querySelector('nav.sidebar a[data-panel="chat"]').classList.add('active');
+            panelUsers.style.display = 'none';
+            panelConversations.style.display = 'none';
+            panelChat.style.display = 'flex';
+
+            renderChatMessages();
+            renderConversationList();
+            renderUserList(userSearchInput.value);
+          });
+
+          userListEl.appendChild(item);
+        });
+      }
+
+      function renderConversationList() {
+        convListEl.innerHTML = '';
+        if(conversations.length === 0) {
+          convListEl.innerHTML = '<p style="padding:1rem; color: var(--text-secondary); font-style: italic;">No conversations found.</p>';
+          return;
+        }
+        conversations.forEach(conv => {
+          const item = document.createElement('div');
+          item.className = 'conversation-item';
+          item.dataset.convid = conv.id;
+          if(conv.id === selectedConversationId) item.classList.add('active');
+          item.setAttribute('role', 'listitem');
+          const otherId = conv.participants.find(p => p !== 'admin');
+          const other = studentResults.find(s => s.studentId === otherId) || { name: 'Unknown' };
+          const avatar = document.createElement('div');
+          avatar.className = 'conversation-avatar';
+          avatar.style.backgroundColor = '#2563eb';
+          avatar.textContent = getInitials(other.name);
+          avatar.setAttribute('aria-hidden', 'true');
+          item.appendChild(avatar);
+          const info = document.createElement('div');
+          info.className = 'conversation-info';
+          const title = document.createElement('div');
+          title.className = 'conversation-title';
+          title.textContent = conv.title;
+          const lastMsg = conv.messages[conv.messages.length - 1];
+          const subtitle = document.createElement('div');
+          subtitle.className = 'conversation-subtitle';
+          subtitle.textContent = lastMsg ? lastMsg.text.slice(0, 40) + (lastMsg.text.length > 40 ? '…' : '') : 'No messages';
+          info.appendChild(title);
+          info.appendChild(subtitle);
+          item.appendChild(info);
+          const timeEl = document.createElement('div');
+          timeEl.className = 'conversation-time';
+          timeEl.textContent = lastMsg ? formatTime(new Date(lastMsg.timestamp)) : '';
+          item.appendChild(timeEl);
+          item.addEventListener('click', () => {
+            selectedConversationId = conv.id;
+            selectedStudentId = other.studentId || null;
+
+            navLinks.forEach(l => l.classList.remove('active'));
+            document.querySelector('nav.sidebar a[data-panel="chat"]').classList.add('active');
+            panelUsers.style.display = 'none';
+            panelConversations.style.display = 'none';
+            panelChat.style.display = 'flex';
+
+            renderChatMessages();
+            renderConversationList();
+            renderUserList(userSearchInput.value);
+          });
+          convListEl.appendChild(item);
+        });
+      }
+
+      function renderChatMessages() {
+        chatMessages.innerHTML = '';
+        if(!selectedConversationId) {
+          chatUserName.textContent = 'Select a conversation';
+          chatUserAvatar.textContent = '';
+          chatInput.disabled = true;
+          chatSendBtn.disabled = true;
+          return;
+        }
+        chatInput.disabled = false;
+        chatSendBtn.disabled = false;
+        const conv = conversations.find(c => c.id === selectedConversationId);
+        if(!conv) return;
+        const otherId = conv.participants.find(p => p !== 'admin');
+        const otherStudent = studentResults.find(s => s.studentId === otherId) || { name: 'Unknown' };
+        chatUserName.textContent = otherStudent.name;
+        chatUserAvatar.style.backgroundColor = '#2563eb';
+        chatUserAvatar.textContent = getInitials(otherStudent.name);
+        conv.messages.forEach(msg => {
+          const msgEl = document.createElement('div');
+          msgEl.className = 'message ' + (msg.senderId === 'admin' ? 'sent' : 'received');
+          msgEl.textContent = msg.text;
+          const timeStampEl = document.createElement('div');
+          timeStampEl.className = 'message-timestamp';
+          timeStampEl.textContent = formatTime(new Date(msg.timestamp));
+          msgEl.appendChild(timeStampEl);
+          chatMessages.appendChild(msgEl);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      document.getElementById('chat-input-area').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const messageText = chatInput.value.trim();
+        if(!messageText || !selectedConversationId) return;
+        const conv = conversations.find(c => c.id === selectedConversationId);
+        if(!conv) return;
+        conv.messages.push({
+          senderId: 'admin',
+          text: messageText,
+          timestamp: new Date()
+        });
+        chatInput.value = '';
+        renderChatMessages();
+        renderConversationList();
+        showToast('Message sent');
+      });
+
+      userSearchInput.addEventListener('input', () => {
+        renderUserList(userSearchInput.value);
+      });
+
+      function openStudentModal(studentId = null) {
+        if(studentId) {
+          const student = studentResults.find(s => s.studentId === studentId);
+          if(!student) return;
+          studentModalTitle.textContent = 'Edit Student';
+          studentNameInput.value = student.name;
+          studentIdInput.value = student.studentId;
+          studentIdInput.disabled = true;
+          studentDeptInput.value = student.department;
+          studentSessionInput.value = student.session;
+          resultsContainer.innerHTML = '';
+          Object.entries(student.result).forEach(([subject, grade]) => addResultRow(subject, grade));
+        } else {
+          studentModalTitle.textContent = 'Add Student';
+          studentNameInput.value = '';
+          studentIdInput.value = '';
+          studentIdInput.disabled = false;
+          studentDeptInput.value = '';
+          studentSessionInput.value = '';
+          resultsContainer.innerHTML = '';
+        }
+        studentModalBackdrop.classList.add('show');
+        studentNameInput.focus();
+      }
+
+      function addResultRow(subject = '', grade = '') {
+        const row = document.createElement('div');
+        row.className = 'result-row';
+
+        const subjectInput = document.createElement('input');
+        subjectInput.type = 'text';
+        subjectInput.placeholder = 'Subject name';
+        subjectInput.value = subject;
+        subjectInput.required = true;
+        subjectInput.name = 'subject[]';
+
+        const gradeInput = document.createElement('input');
+        gradeInput.type = 'text';
+        gradeInput.placeholder = 'Grade (e.g., 85%)';
+        gradeInput.value = grade;
+        gradeInput.required = true;
+        gradeInput.name = 'grade[]';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.setAttribute('aria-label', 'Remove this subject and grade');
+        removeBtn.textContent = '×';
+        removeBtn.title = 'Remove subject';
+        removeBtn.addEventListener('click', () => {
+          resultsContainer.removeChild(row);
+        });
+
+        row.appendChild(subjectInput);
+        row.appendChild(gradeInput);
+        row.appendChild(removeBtn);
+
+        resultsContainer.appendChild(row);
+      }
+
+      addResultRowBtn.addEventListener('click', () => {
+        addResultRow();
+      });
+
+      cancelStudentBtn.addEventListener('click', () => {
+        studentModalBackdrop.classList.remove('show');
+      });
+      studentModalBackdrop.addEventListener('click', e => {
+        if(e.target === studentModalBackdrop) {
+          studentModalBackdrop.classList.remove('show');
+        }
+      });
+
+      studentForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const name = studentNameInput.value.trim();
+        const studentId = studentIdInput.value.trim();
+        const department = studentDeptInput.value;
+        const session = studentSessionInput.value.trim();
+
+        if(!name || !studentId || !department || !session) {
+          alert('Please fill all required fields.');
+          return;
+        }
+
+        const subjects = Array.from(studentForm.querySelectorAll('input[name="subject[]"]')).map(input => input.value.trim()).filter(s => s);
+        const grades = Array.from(studentForm.querySelectorAll('input[name="grade[]"]')).map(input => input.value.trim()).filter(g => g);
+
+        if(subjects.length !== grades.length) {
+          alert('Please correctly fill all subjects and grades.');
+          return;
+        }
+
+        const results = {};
+        for(let i=0; i < subjects.length; i++){
+          results[subjects[i]] = grades[i];
+        }
+
+        const studentIndex = studentResults.findIndex(s => s.studentId === studentId);
+
+        if(studentIdInput.disabled) {
+          if(studentIndex === -1) {
+            alert('Student not found for editing.');
+            return;
+          }
+          studentResults[studentIndex].name = name;
+          studentResults[studentIndex].department = department;
+          studentResults[studentIndex].session = session;
+          studentResults[studentIndex].result = results;
+          showToast(`Student ${name} updated.`);
+        } else {
+          if(studentResults.some(s => s.studentId === studentId)) {
+            alert('Student ID already exists. Please use a unique Student ID.');
+            return;
+          }
+          studentResults.push({
+            name,
+            studentId,
+            department,
+            session,
+            result: results
+          });
+          showToast(`Student ${name} added.`);
+        }
+
+        studentModalBackdrop.classList.remove('show');
+        saveDataToStorage();
+        renderUserList(userSearchInput.value);
+        renderConversationList();
+      });
+
+      navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetPanel = link.dataset.panel;
+          navLinks.forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+          selectedPanel = targetPanel;
+
+          panelUsers.style.display = targetPanel === 'users' ? 'flex' : 'none';
+          panelConversations.style.display = targetPanel === 'conversations' ? 'flex' : 'none';
+          panelChat.style.display = targetPanel === 'chat' ? 'flex' : 'none';
+
+          if(targetPanel === 'users') {
+            renderUserList(userSearchInput.value);
+            selectedStudentId = null;
+            selectedConversationId = null;
+            chatInput.disabled = true;
+            chatSendBtn.disabled = true;
+            chatUserName.textContent = 'Select a conversation';
+            chatUserAvatar.textContent = '';
+            chatMessages.innerHTML = '';
+          } else if(targetPanel === 'conversations') {
+            selectedConversationId = null;
+            renderConversationList();
+            panelChat.style.display = 'none';
+          } else if(targetPanel === 'chat') {
+            renderChatMessages();
+          }
+        });
+      });
+
+      addUserBtn.addEventListener('click', () => {
+        openStudentModal(null);
+      });
+
+      menuToggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+      });
+
+      renderUserList();
+      renderConversationList();
+
+      document.body.addEventListener('click', (e) => {
+        if(window.innerWidth <= 767 && sidebar.classList.contains('open')) {
+          if(!sidebar.contains(e.target) && e.target !== menuToggleBtn) {
+            sidebar.classList.remove('open');
+          }
+        }
+      });
+
+      sidebar.addEventListener('keydown', e => {
+        if(e.key === 'Escape' && sidebar.classList.contains('open')) {
+          sidebar.classList.remove('open');
+          menuToggleBtn.focus();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
+
+
